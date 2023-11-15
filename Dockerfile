@@ -82,8 +82,7 @@ WORKDIR /azp
 # docker run -it imagename sh
 # then adapt the folder structure accordingly. Specifying the minor version is obligatory.
 
-# additionaly in your build pipeline yaml you need to disable downloading python from the public registry
-#
+# additionaly in your build pipeline yaml you need to disable downloading python from the public registry, as in the example-azure-build-pipeline
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/use-python-version-v0?view=azure-pipeline
 
 RUN mkdir -p /azp/_work/_tool/Python/3.7.17/
@@ -103,7 +102,7 @@ RUN cd /azp/_work/_tool/Python/3.12.0/ && touch x64.complete && python3.12 -m ve
 
 # if docker cant find the start.sh file, it might be because of the 'line separator' which windows changes silently
 # line separator of .sh file should be LF, not CRLF,
-# you can change this in pycharm bottom right while having the file open
+# you can change this e.g. with pycharm ide, bottom right while having the file open
 COPY start.sh .
 RUN chmod +x start.sh
 
