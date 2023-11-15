@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  azurebuildagent:
+    build: .
+    image: your-container-repository/az-buildagent:Python312-latest
+    restart: always
+    environment:
+      AZP_URL: ${AZP_URL} #your azure devops url, e.g. https://dev.azure.com/foo
+      # https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows
+      AZP_TOKEN: ${AZP_TOKEN} # 'personal acces token' in azure devops
+      AZP_POOL: ${AZP_POOL} # name of agent pool, created in organization settings
+    deploy:
+      mode: replicated
+      replicas: 1
+
+
