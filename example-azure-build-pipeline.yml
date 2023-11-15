@@ -1,0 +1,84 @@
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/python-webapp?view=azure-devops#yaml-pipeline-explained
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/python-webapp?view=azure-devops
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema%2Cparameter-schema
+# look for the word 'your' for what you need to replace with your own values
+
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  # tag: '$(Build.BuildId)'
+  tag: 'prod_latest'
+  pythonVersion: '3.11'
+  webAppName: 'your app service name in azure portal'
+  projectRoot: .
+  azureServiceConnectionId: 'your azureServiceConnectionId'
+  vmImageName: 'ubuntu-latest'
+  pool: 'name of the build pool in azure devops where your agents are'
+  environmentName: 'production'
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool: '$(pool)'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(pythonVersion)'
+      inputs:
+         versionSpec: '$(pythonVersion)'
+         #for self hosted build agent don't download but use the ones on the agent
+         disableDownloadFromRegistry: true
+    - script: |
+         python -m venv antenv
+         source antenv/bin/activate
+         python -m pip install --upgrade pip
+         pip install setup
+         pip install -r requirements.txt
+      workingDirectory: $(projectRoot)
+      displayName: "Install requirements"
+    
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Build.SourcesDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+        replaceExistingArchive: true
+        verbose: # (no value); this input is optional
+    - publish: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+      displayName: 'Upload package'
+      artifact: drop
+
+- stage: Deploy
+  displayName: Deploy stage
+  jobs:
+  - deployment: DeploymentJob
+    displayName: DeploymentJob
+    pool: '$(pool)'
+    environment: $(environmentName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python version'
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy Azure Web App : {{ webAppName }}'
+            inputs:
+              azureSubscription: $(azureServiceConnectionId)
+              appName: $(webAppName)
+              package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+              startUpCommand: "your startup command"
+              appSettings:
+                -APPSERVICEAPPLOGS_TRACE_LEVEL Verbose
+                -WEBSITE_ENABLE_SYNC_UPDATE_SITE true
+                # -PYTHON_ENABLE_GUNICORN_MULTIWORKERS true

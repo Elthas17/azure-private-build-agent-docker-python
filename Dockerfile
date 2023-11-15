@@ -75,12 +75,17 @@ ENV TARGETARCH=linux-x64
 
 WORKDIR /azp
 
-# Configure correct directory structure for python versions
+# Configure correct directory structure for tools (python versions)
 # https://github.com/microsoft/azure-pipelines-tool-lib/blob/master/docs/overview.md#tool-cache
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/use-python-version-v0?view=azure-pipeline
 # to check which python version got installed into the container, run the container interactively
 # docker run -it imagename sh
-# then adapt the folder structure accordingly
+# then adapt the folder structure accordingly. Specifying the minor version is obligatory.
+
+# additionaly in your build pipeline yaml you need to disable downloading python from the public registry
+#
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/use-python-version-v0?view=azure-pipeline
+
 RUN mkdir -p /azp/_work/_tool/Python/3.7.17/
 RUN cd /azp/_work/_tool/Python/3.7.17/ && touch x64.complete && python3.7 -m venv x64
 
